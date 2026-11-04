@@ -16,11 +16,7 @@ class ProfileController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'sometimes|exists:users,id',
             'address' => 'sometimes',
-            'city_id' => 'sometimes|string|max:255',
-            'province' => 'sometimes|string|max:255',
-            'type' => 'sometimes|string|max:255',
-            'city_name' => 'sometimes|string|max:255',
-            'postal_code' => 'sometimes|string|max:255',
+            'city_id' => 'sometimes|string|max:255'
         ]);
 
 
@@ -36,10 +32,6 @@ class ProfileController extends Controller
             'user_id' => $request->user_id,
             'address' => $request->address,
             'city_id' => $request->city_id,
-            'province' => $request->province,
-            'type' => $request->type,
-            'city_name' => $request->city_name,
-            'postal_code' => $request->postal_code,
         ]);
 
 

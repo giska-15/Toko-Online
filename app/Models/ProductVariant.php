@@ -38,6 +38,9 @@ class ProductVariant extends Model
 
     public function getImageProductAttribute($value)
     {
-        return env('ASSET_URL'). "/uploads/".$value;
+        if (empty($value)) {
+            return null;
+        }
+        return env('ASSET_URL', 'http://localhost:8000') . '/storage/products/' . $value;
     }
 }

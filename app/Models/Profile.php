@@ -19,10 +19,6 @@ class Profile extends Model
         'user_id',
         'address',
         'city_id',
-        'province',
-        'type',
-        'city_name',
-        'postal_code'
     ];
 
     public function users()

@@ -136,7 +136,7 @@ class TransactionController extends Controller
 
         if($id)
         {
-            $transaction = Transaction::with(['users', 'carts', 'users.profiles'])->find($id);
+            $transaction = Transaction::with(['users', 'carts.rates', 'users.profiles'])->find($id);
 
             if($transaction)
             {
@@ -155,7 +155,7 @@ class TransactionController extends Controller
             }
         }
 
-        $transaction = Transaction::with(['users', 'carts', 'users.profiles']);
+        $transaction = Transaction::with(['users', 'carts.rates', 'users.profiles']);
 
         if($user_id)
         {
@@ -173,4 +173,119 @@ class TransactionController extends Controller
         );
 
     }
+
+    public function searchCityByName(Request $request)
+    {
+        // Ambil input 'city_name' dari request dan bersihkan dari spasi
+        $cityName = strtolower(trim($request->input('city_name')));
+
+        // Validasi input
+        if (!$cityName) {
+            return ResponseFormmater::error(
+                null,
+                'City name is required',
+                400
+            );
+        }
+
+        // Mengirim request ke API Raja Ongkir menggunakan HTTP Client Laravel
+        $response = Http::withHeaders([
+            'key' => env('RAJAONGKIR_API_KEY')
+        ])->get(env('RAJAONGKIR_API_URL') . '/city');
+
+        // Parse JSON response dari API
+        $cities = json_decode($response->body())->rajaongkir->results;
+
+        // Pecah input menjadi array kata
+        $searchKeywords = explode(' ', $cityName);
+
+        // Filter kota berdasarkan kecocokan kata kunci dalam `city_name`
+        $filteredCities = array_filter($cities, function($city) use ($searchKeywords) {
+            // Bandingkan setiap kata kunci dengan nama kota, tidak case sensitive
+            foreach ($searchKeywords as $keyword) {
+                if (stripos($city->city_name, $keyword) !== false) {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        // Jika kota ditemukan, kembalikan data kota dengan ResponseFormmater::success()
+        if (!empty($filteredCities)) {
+            // Menghilangkan indeks numerik acak dan menggantinya dengan indeks berurutan
+            $filteredCities = array_values($filteredCities);
+
+            return ResponseFormmater::success(
+                $filteredCities,
+                'Cities found successfully'
+            );
+        } else {
+            return ResponseFormmater::error(
+                null,
+                'No cities found',
+                404
+            );
+        }
+    }
+
+    public function cekOngkir(Request $request)
+        {
+            // Validasi input request
+            $request->validate([
+                'origin' => 'required|string',
+                'destination' => 'required|string',
+                'weight' => 'required|integer',
+                'courier' => 'required|string',
+            ]);
+
+            // Ambil input dari request
+            $origin = $request->input('origin');
+            $destination = $request->input('destination');
+            $weight = $request->input('weight');
+            $courier = $request->input('courier');
+
+            // Kirim request ke API RajaOngkir
+            $response = Http::withHeaders([
+                'key' => env('RAJAONGKIR_API_KEY')
+            ])->post(env('RAJAONGKIR_API_URL') . '/cost', [
+                'origin' => $origin,
+                'destination' => $destination,
+                'weight' => $weight,
+                'courier' => $courier
+            ]);
+
+            // Parse JSON response dari API RajaOngkir
+            $rajaOngkirResponse = json_decode($response->body());
+
+            // Cek apakah response sukses
+            if ($rajaOngkirResponse->rajaongkir->status->code == 200) {
+                // Mengambil data results dari RajaOngkir
+                $results = $rajaOngkirResponse->rajaongkir->results;
+
+                // Format data menjadi format yang diinginkan
+                $formattedResponse = [
+                    "meta" => [
+                        "code" => 200,
+                        "status" => "success",
+                        "message" => "Cost data fetched successfully"
+                    ],
+                    "data" => $results // mengambil data hasil dari API
+                ];
+
+                // Return formatted response
+                return response()->json($formattedResponse, 200);
+            } else {
+                // Jika API RajaOngkir memberikan error
+                $errorResponse = [
+                    "meta" => [
+                        "code" => $rajaOngkirResponse->rajaongkir->status->code,
+                        "status" => "error",
+                        "message" => $rajaOngkirResponse->rajaongkir->status->description
+                    ],
+                    "data" => null
+                ];
+
+                return response()->json($errorResponse, $rajaOngkirResponse->rajaongkir->status->code);
+            }
+        }
 }

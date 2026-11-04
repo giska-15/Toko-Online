@@ -32,6 +32,12 @@ class Cart extends Model
         return $this->belongsTo(User::class, 'user_id' , 'id');
     }
 
+    public function rates()
+    {
+        return $this->hasManyThrough(Rate::class, Product::class, 'id', 'product_id', 'product_id', 'id')
+        ->select(['user_id', 'product_id']); // Ambil kolom yang diperlukan
+    }
+
     public function getCreatedAtAttribute($value)
     {
         return Carbon::parse($value)->setTimezone('UTC')->setTimezone('Asia/Makassar')->format('Y-m-d H:i');

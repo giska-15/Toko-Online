@@ -22,7 +22,7 @@ class CreateUsersTable extends Migration
 
             $table->string('phone')->nullable();
             $table->text('avatar')->nullable();
-            $table->enum('role', ['user', 'admin'])->default('user');
+            $table->string('role', 50)->default('user');
 
             $table->rememberToken();
             $table->timestamps();

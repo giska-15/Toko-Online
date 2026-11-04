@@ -62,4 +62,60 @@ class RateController extends Controller
             );
         }
     }
+
+    public function Rating(Request $request)
+    {
+        $id = $request->input('id');
+        $user_id = $request->input('user_id');
+        $product_id = $request->input('product_id');
+        $variant_name = $request->input('variant_name');
+    
+        // Jika ada ID spesifik, cari berdasarkan ID
+        if ($id) {
+            $rate = Rate::select('user_id', 'product_id')->find($id);
+    
+            if ($rate) {
+                return ResponseFormmater::success(
+                    $rate,
+                    'Data Rate Berhasil diambil'
+                );
+            } else {
+                return ResponseFormmater::error(
+                    null,
+                    'Data Rate tidak ada',
+                    404
+                );
+            }
+        }
+    
+        // Query dasar dengan kondisi yang ketat
+        $rate = Rate::select('rates.*')
+            ->when($user_id, function($query) use ($user_id) {
+                return $query->where('user_id', $user_id);
+            })
+            ->when($product_id, function($query) use ($product_id) {
+                return $query->where('product_id', $product_id);
+            })
+            ->when($variant_name, function($query) use ($variant_name) {
+                return $query->where('variant_rate', $variant_name);
+            });
+    
+        // Dapatkan hasil
+        $results = $rate->get();
+    
+        // Jika tidak ada data
+        if ($results->isEmpty()) {
+            return ResponseFormmater::error(
+                null,
+                'Data Rate tidak ditemukan',
+                404
+            );
+        }
+    
+        // Kembalikan response sukses
+        return ResponseFormmater::success(
+            $results,
+            'Data Rate Berhasil diambil'
+        );
+    }
 }

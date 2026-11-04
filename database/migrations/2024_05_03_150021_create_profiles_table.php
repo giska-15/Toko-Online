@@ -18,10 +18,6 @@ class CreateProfilesTable extends Migration
             $table->bigInteger('user_id')->nullable();
             $table->text('address')->nullable();
             $table->string('city_id')->nullable();
-            $table->string('province')->nullable();
-            $table->string('type')->nullable();
-            $table->string('city_name')->nullable();
-            $table->string('postal_code')->nullable();
             $table->timestamps();
         });
     }

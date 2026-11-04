@@ -20,7 +20,12 @@ class Product extends Model
         'name_product',
         'description',
         'price_product',
-        'price_strike'
+        'price_strike',
+        'harga_reseller',
+        'harga_owner',
+        'stock_product',
+        'photo_product',
+        'description_product'
     ];
 
     public function category()
@@ -43,6 +48,11 @@ class Product extends Model
         return $this->hasMany(Rate::class, 'product_id', 'id');
     }
 
+    public function resellerPrices()
+    {
+        return $this->hasMany(ResellerPrice::class, 'product_id', 'id');
+    }
+
     public function getCreatedAtAttribute($value)
     {
         return Carbon::parse($value)->setTimezone('UTC')->setTimezone('Asia/Makassar')->format('Y-m-d H:i');
@@ -51,5 +61,13 @@ class Product extends Model
     public function getUpdatedAtAttribute($value)
     {
         return Carbon::parse($value)->setTimezone('UTC')->setTimezone('Asia/Makassar')->format('Y-m-d H:i');
+    }
+
+    public function getPhotoProductAttribute($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+        return env('ASSET_URL', 'http://localhost:8000') . '/storage/products/' . $value;
     }
 }
